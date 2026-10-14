@@ -1,59 +1,68 @@
 import AlertCard from './AlertCard'
+import GlassSurface from './GlassSurface'
+import { memo } from 'react'
 
-export default function LiveFeedSection({ alerts, newAlertIds }) {
+function LiveFeedSection({ alerts, newAlertIds }) {
   return (
-    <div style={{
-      background: 'var(--bg-panel)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-xl)', display: 'flex', flexDirection: 'column',
-      maxHeight: 440, overflow: 'hidden',
-    }}>
-      {/* Header */}
+    <GlassSurface
+      width="100%"
+      height="auto"
+      borderRadius={4}
+      blur={8}
+      backgroundOpacity={0.45}
+      style={{ maxHeight: 440, display: 'flex', flexDirection: 'column' }}
+    >
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '14px 18px', borderBottom: '1px solid var(--border)', flexShrink: 0,
+        padding: '12px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <h2 style={{
-            fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
-            color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.12em',
+            color: 'var(--text-muted)', fontFamily: 'var(--font-body)', textTransform: 'uppercase',
           }}>
             Live Feed
           </h2>
-          <span style={{
-            background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 4, padding: '1px 7px',
-            fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--text-dim)',
+          <span className="mono-num" style={{
+            background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-sm)', padding: '1px 6px',
+            fontSize: 10, fontFamily: 'var(--font-body)', color: 'var(--text-dim)',
           }}>
             {alerts.length}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: 'var(--green)',
-            boxShadow: '0 0 8px var(--green)',
+            width: 5, height: 5, borderRadius: '50%',
+            background: 'var(--green)', boxShadow: '0 0 6px var(--green)',
             animation: 'pulse-dot 1.5s infinite',
           }} />
-          <span style={{ fontSize: 10, color: 'var(--green)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em' }}>
+          <span style={{ fontSize: 9, color: 'var(--green)', fontFamily: 'var(--font-body)', letterSpacing: '0.1em' }}>
             LIVE
           </span>
         </div>
       </div>
 
-      {/* Feed */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
+      <div style={{ flex: 1, overflow: 'hidden', padding: '8px 10px' }}>
         {alerts.length === 0 ? (
-          <div style={{ padding: '40px 0', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, marginBottom: 10, opacity: 0.4 }}>⬡</div>
-            <p style={{ color: 'var(--text-dim)', fontSize: 11, fontFamily: 'var(--font-mono)', lineHeight: 1.7 }}>
-              no alerts yet<br />
-              <span style={{ color: 'var(--text-muted)', fontSize: 10 }}>run node simulate.js</span>
+          <div style={{ padding: '36px 0', textAlign: 'center' }}>
+            <p style={{ color: 'var(--color-accent-secondary)', fontSize: 20, marginBottom: 8 }}>◌</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'var(--font-body)', lineHeight: 1.6 }}>
+              No active threats detected
             </p>
           </div>
-        ) : alerts.map((a, i) => (
-          <AlertCard key={a.id || i} alert={a} isNew={newAlertIds?.has(a.id)} />
-        ))}
+        ) : (
+          <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+            {alerts.map(alert => (
+              <div key={alert.id} style={{ marginBottom: 6 }}>
+                <AlertCard alert={alert} isNew={newAlertIds?.has(alert.id)} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </GlassSurface>
   )
 }
+
+export default memo(LiveFeedSection)

@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { API_BASE } from '../constants'
-import { saveAuth } from '../utils'
+import { saveAuth, fetchOpts } from '../utils'
+import MoltenMetal from '../components/MoltenMetal'
+import SpotlightCard from '../components/SpotlightCard'
+import BlurText from '../components/BlurText'
 
 export default function LoginPage({ onLogin }) {
   const [mode, setMode] = useState('login')
@@ -13,15 +16,14 @@ export default function LoginPage({ onLogin }) {
     if (!user || !pass) return setErr('Fill in both fields')
     setBusy(true); setErr('')
     try {
-      const res  = await fetch(`${API_BASE}/auth/${mode}`, {
+      const res  = await fetch(`${API_BASE}/auth/${mode}`, fetchOpts({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: user, password: pass }),
-      })
+      }))
       const data = await res.json()
       if (!res.ok) { setErr(data.error || 'Failed'); setBusy(false); return }
       if (mode === 'register') { setMode('login'); setErr(''); setBusy(false); return }
-      saveAuth(data.token, data.username)
+      saveAuth(data.username, data.role, data.token)
       onLogin()
     } catch {
       setErr('Cannot reach backend — is it running?')
@@ -30,122 +32,86 @@ export default function LoginPage({ onLogin }) {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex',
-      background: 'var(--bg)',
-    }}>
-      {/* Left panel — branding */}
-      <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', padding: '60px 80px',
-        position: 'relative',
-      }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 60 }}>
-          <div style={{
-            width: 38, height: 38, borderRadius: 10,
-            background: 'var(--accent-dim)', border: '1px solid var(--accent)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 20px var(--accent-glow)',
-          }}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </div>
-          <span style={{ fontWeight: 800, fontSize: 20, letterSpacing: '-0.3px' }}>
-            Linux<span className="grad-text">Watch</span>
-          </span>
-        </div>
-
-        <h2 style={{ fontWeight: 900, fontSize: 42, lineHeight: 1.1, letterSpacing: '-1px', marginBottom: 16 }}>
-          Intrusion<br />
-          <span className="grad-text">Detection</span><br />
-          System
-        </h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: 15, lineHeight: 1.6, maxWidth: 340, marginBottom: 48 }}>
-          Real-time threat monitoring and alerting for your Linux infrastructure.
-        </p>
-
-        {/* Feature bullets */}
-        {[
-          { icon: '⬡', label: 'Live alert feed', desc: 'Instant socket-based notifications' },
-          { icon: '◈', label: 'Multi-attack detection', desc: '16 rules across 9 attack types' },
-          { icon: '⌁', label: 'Per-user isolation', desc: 'Your alerts, only yours' },
-        ].map(f => (
-          <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 20 }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: 8, flexShrink: 0,
-              background: 'var(--accent-dim)', border: '1px solid var(--accent)30',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, color: 'var(--accent-2)',
-            }}>
-              {f.icon}
-            </div>
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{f.label}</p>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{f.desc}</p>
-            </div>
-          </div>
-        ))}
+    <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
+        <MoltenMetal
+          color1="#1a0800"
+          color2="#e8590c"
+          color3="#ffd4a8"
+          speed={0.25}
+          scale={4}
+          detail={2}
+          glow={1.2}
+          brightness={1.0}
+          opacity={0.95}
+          grain={false}
+          dpr={1}
+          mouseInteraction
+          mouseStrength={0.2}
+        />
       </div>
 
-      {/* Right panel — login card */}
       <div style={{
-        width: 460, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 40, borderLeft: '1px solid var(--border)',
-        background: 'var(--bg-panel)',
+        position: 'relative', zIndex: 1, minHeight: '100vh',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        padding: 24,
       }}>
-        <div style={{ width: '100%', maxWidth: 380 }}>
-          <h3 style={{ fontWeight: 800, fontSize: 22, marginBottom: 6, letterSpacing: '-0.3px' }}>
-            {mode === 'login' ? 'Welcome back' : 'Create account'}
+        <div style={{ marginBottom: 32, textAlign: 'center' }}>
+          <BlurText text="LinuxWatch" className="page-title" delay={80} as="h1" />
+          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 8, fontFamily: 'var(--font-body)' }}>
+            Intrusion Detection System
+          </p>
+        </div>
+
+        <SpotlightCard
+          spotlightColor="rgba(232, 89, 12, 0.12)"
+          style={{ width: '100%', maxWidth: 400 }}
+        >
+          <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 4, color: 'var(--color-text-heading)', fontFamily: 'var(--font-heading)' }}>
+            {mode === 'login' ? 'Sign in' : 'Create account'}
           </h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 32, fontFamily: 'var(--font-mono)' }}>
-            {mode === 'login' ? 'Sign in to access your dashboard' : 'Register a new account'}
+          <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 24, fontFamily: 'var(--font-body)' }}>
+            {mode === 'login' ? 'Access your security dashboard' : 'Register a new operator account'}
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <Field label="Username" value={user} onChange={setUser} placeholder="admin" onEnter={submit} />
             <Field label="Password" value={pass} onChange={setPass} placeholder="••••••••" type="password" onEnter={submit} />
           </div>
 
           {err && (
-            <p style={{ color: 'var(--red)', fontSize: 12, fontFamily: 'var(--font-mono)', marginTop: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>✗</span> {err}
+            <p style={{ color: 'var(--color-accent)', fontSize: 12, fontFamily: 'var(--font-body)', marginTop: 12 }}>
+              ✗ {err}
             </p>
           )}
 
-          <button onClick={submit} disabled={busy} style={{
-            width: '100%', marginTop: 24, padding: '12px 0',
-            background: busy ? 'var(--border)' : 'linear-gradient(135deg, var(--accent), var(--accent-2))',
-            color: busy ? 'var(--text-muted)' : '#fff',
-            border: 'none', borderRadius: 'var(--radius)',
-            fontFamily: 'var(--font-ui)', fontWeight: 700, fontSize: 14,
-            cursor: busy ? 'not-allowed' : 'pointer',
-            transition: 'opacity .15s',
-            boxShadow: busy ? 'none' : '0 0 24px var(--accent-glow)',
-            letterSpacing: '0.02em',
-          }}
-            onMouseEnter={e => { if (!busy) e.currentTarget.style.opacity = '0.9' }}
-            onMouseLeave={e => { if (!busy) e.currentTarget.style.opacity = '1' }}
+          <button
+            onClick={submit}
+            disabled={busy}
+            className="btn-primary"
+            style={{ width: '100%', marginTop: 20, padding: '11px 0', fontSize: 14 }}
           >
             {busy ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Register'}
           </button>
 
-          <div style={{ textAlign: 'center', marginTop: 20 }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-              {mode === 'login' ? "No account? " : 'Have an account? '}
-            </span>
-            <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErr('') }}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer', fontSize: 12,
-                fontFamily: 'var(--font-ui)', fontWeight: 600,
-                background: 'var(--accent-grad)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>
-              {mode === 'login' ? 'Register' : 'Sign In'}
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <button
+              className="link-secondary"
+              style={{ fontSize: 12, background: 'none', border: 'none' }}
+              onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErr('') }}
+            >
+              {mode === 'login' ? 'Create account' : 'Back to sign in'}
             </button>
           </div>
-        </div>
+
+          {mode === 'login' && (
+            <p style={{ textAlign: 'center', marginTop: 12 }}>
+              <span className="link-secondary" style={{ fontSize: 11, cursor: 'default', opacity: 0.7 }}>
+                Forgot password?
+              </span>
+            </p>
+          )}
+        </SpotlightCard>
       </div>
     </div>
   )
@@ -154,7 +120,10 @@ export default function LoginPage({ onLogin }) {
 function Field({ label, value, onChange, placeholder, type = 'text', onEnter }) {
   return (
     <div>
-      <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: 11, marginBottom: 7, fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+      <label style={{
+        display: 'block', color: 'var(--text-muted)', fontSize: 10, marginBottom: 6,
+        fontFamily: 'var(--font-body)', letterSpacing: '0.08em', textTransform: 'uppercase',
+      }}>
         {label}
       </label>
       <input
@@ -162,13 +131,13 @@ function Field({ label, value, onChange, placeholder, type = 'text', onEnter }) 
         onChange={e => onChange(e.target.value)}
         onKeyDown={e => e.key === 'Enter' && onEnter()}
         style={{
-          width: '100%', padding: '10px 14px',
-          background: 'var(--bg-card)', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)', color: 'var(--text)',
-          fontFamily: 'var(--font-mono)', fontSize: 13, outline: 'none',
+          width: '100%', padding: '10px 12px',
+          background: 'var(--color-bg)', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-sm)', color: 'var(--color-text)',
+          fontFamily: 'var(--font-body)', fontSize: 13, outline: 'none',
           transition: 'border-color .15s',
         }}
-        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+        onFocus={e => e.target.style.borderColor = 'var(--color-accent)'}
         onBlur={e  => e.target.style.borderColor = 'var(--border)'}
       />
     </div>

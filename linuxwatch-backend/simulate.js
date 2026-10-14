@@ -8,29 +8,51 @@
 
 const http = require('http');
 
-const BACKEND = 'http://localhost:3001';
+const BACKEND = 'http://localhost:5001';
 const TOKEN   = process.env.JWT_TOKEN || '';
+const SIM_USER = process.env.SIM_USER || '';
+const SIM_PASS = process.env.SIM_PASS || '';
 
-if (!TOKEN) {
-  console.error('❌  No JWT token found.');
-  console.error('    Login via the frontend, open DevTools → Application → localStorage');
-  console.error('    Copy the token, then run:');
+async function obtainToken() {
+  if (TOKEN) return TOKEN;
+  if (!SIM_USER || !SIM_PASS) return null;
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify({ username: SIM_USER, password: SIM_PASS });
+    const req = http.request({
+      hostname: 'localhost', port: 5001, path: '/api/auth/login', method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+    }, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(data).token); } catch { reject(new Error('Login failed')); }
+      });
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+if (!TOKEN && !(SIM_USER && SIM_PASS)) {
+  console.error('❌  No credentials found.');
   console.error('    JWT_TOKEN=<token> node simulate.js');
+  console.error('    SIM_USER=admin SIM_PASS=secret node simulate.js');
   process.exit(1);
 }
 
-function post(path, body) {
+function post(path, body, token) {
   return new Promise((resolve) => {
     const json = JSON.stringify(body);
     const opts = {
       hostname: 'localhost',
-      port: 3001,
+      port: 5001,
       path,
       method: 'POST',
       headers: {
         'Content-Type':  'application/json',
         'Content-Length': Buffer.byteLength(json),
-        'Authorization': `Bearer ${TOKEN}`,
+        'Authorization': `Bearer ${token}`,
       },
     };
     const req = http.request(opts, (res) => {
@@ -52,12 +74,17 @@ async function delay(ms) {
 }
 
 async function run() {
+  const token = await obtainToken();
+  if (!token) { console.error('Could not obtain token'); process.exit(1); }
+
+  const send = (path, body) => post(path, body, token);
+
   console.log('🚀  LinuxWatch Attack Simulator\n');
 
-  // ── 1. SSH Brute Force (5 rapid → CRITICAL, first 2 also fire LOW)
+  // ── 1. SSH Brute Force (>5 in 60s → CRITICAL on 6th)
   console.log('── SSH Brute Force ──');
   for (let i = 1; i <= 7; i++) {
-    const r = await post('/api/events', {
+    const r = await send('/api/events', {
       event_type: 'SSH_FAILED_LOGIN',
       source_ip: '192.168.1.99',
       username: 'root',
@@ -69,12 +96,13 @@ async function run() {
 
   await delay(800);
 
-  // ── 2. Port Scan (12 rapid probes → MEDIUM at 4, HIGH at 10)
+  // ── 2. Port Scan (>10 distinct ports in 30s → HIGH)
   console.log('\n── Port Scan ──');
   for (let i = 1; i <= 12; i++) {
-    const r = await post('/api/events', {
+    const r = await send('/api/events', {
       event_type: 'PORT_SCAN',
       source_ip: '10.0.0.55',
+      port: 1000 + i,
       raw_log: `Nmap scan from 10.0.0.55 port ${1000 + i}`,
     });
     console.log(`  [SCAN ${i}/12] status=${r.status} alert=${r.body?.alert?.rule_name || 'none'}`);
@@ -83,14 +111,15 @@ async function run() {
 
   await delay(800);
 
-  // ── 3. Sudo Abuse (3 failures → HIGH)
+  // ── 3. Sudo Abuse (non-whitelisted command → HIGH)
   console.log('\n── Sudo Abuse ──');
   for (let i = 1; i <= 3; i++) {
-    const r = await post('/api/events', {
-      event_type: 'SUDO_FAILURE',
+    const r = await send('/api/events', {
+      event_type: 'SUDO_COMMAND',
       source_ip: '192.168.1.20',
       username: 'jdoe',
-      raw_log: `sudo: jdoe : command not allowed ; TTY=pts/1`,
+      sudo_command: 'nc -l -p 4444',
+      raw_log: `sudo: jdoe : command not allowed ; TTY=pts/1 ; COMMAND=nc -l -p 4444`,
     });
     console.log(`  [SUDO ${i}/3] status=${r.status} alert=${r.body?.alert?.rule_name || 'none'}`);
     await delay(400);
@@ -98,10 +127,24 @@ async function run() {
 
   await delay(800);
 
+  // ── 3b. SSH New Key → CRITICAL
+  console.log('\n── SSH New Key ──');
+  {
+    const r = await send('/api/events', {
+      event_type: 'SSH_NEW_KEY',
+      source_ip: '192.168.1.10',
+      username: 'deploy',
+      raw_log: 'Accepted publickey for deploy — new key fingerprint SHA256:abc123',
+    });
+    console.log(`  [SSH_NEW_KEY] status=${r.status} alert=${r.body?.alert?.rule_name || 'none'}`);
+  }
+
+  await delay(800);
+
   // ── 4. DDoS HTTP Flood (25 rapid → MEDIUM at 8, CRITICAL at 20)
   console.log('\n── DDoS HTTP Flood ──');
   for (let i = 1; i <= 25; i++) {
-    const r = await post('/api/events', {
+    const r = await send('/api/events', {
       event_type: 'HTTP_FLOOD',
       source_ip: '203.0.113.77',
       raw_log: `GET / HTTP/1.1 from 203.0.113.77`,
@@ -116,7 +159,7 @@ async function run() {
   // ── 5. SQL Injection (3 attempts → HIGH then CRITICAL)
   console.log('\n── SQL Injection ──');
   for (let i = 1; i <= 3; i++) {
-    const r = await post('/api/events', {
+    const r = await send('/api/events', {
       event_type: 'SQL_INJECTION',
       source_ip: '172.16.0.44',
       username: 'anonymous',
@@ -131,7 +174,7 @@ async function run() {
   // ── 6. MITM (2 events → HIGH then CRITICAL)
   console.log('\n── Man-in-the-Middle ──');
   for (let i = 1; i <= 2; i++) {
-    const r = await post('/api/events', {
+    const r = await send('/api/events', {
       event_type: 'MITM_DETECTED',
       source_ip: '192.168.1.77',
       username: null,
@@ -146,7 +189,7 @@ async function run() {
   // ── 7. Malware — Spyware (HIGH) then Ransomware (CRITICAL)
   console.log('\n── Malware Detection ──');
   for (const [type, host] of [['SPYWARE', '192.168.1.30'], ['RANSOMWARE', '192.168.1.31']]) {
-    const r = await post('/api/events', {
+    const r = await send('/api/events', {
       event_type: 'MALWARE_DETECTED',
       source_ip: host,
       username: 'svc_account',
@@ -166,7 +209,7 @@ async function run() {
     { username: 'bob',   clicked: true,  source_ip: '91.108.4.5' },
   ];
   for (const ev of phishEvents) {
-    const r = await post('/api/events', {
+    const r = await send('/api/events', {
       event_type: 'PHISHING_ATTEMPT',
       ...ev,
       raw_log: `Phishing email from 91.108.4.5 targeting ${ev.username}`,
@@ -179,7 +222,7 @@ async function run() {
 
   // ── 9. Credential Stuffing
   console.log('\n── Credential Stuffing ──');
-  const r = await post('/api/events', {
+  const r = await send('/api/events', {
     event_type: 'CREDENTIAL_STUFFING',
     source_ip: '45.33.32.156',
     username: 'admin',

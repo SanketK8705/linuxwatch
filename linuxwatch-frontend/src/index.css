@@ -3,76 +3,120 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:           #07080f;
-  --bg-panel:     #0c0e1a;
-  --bg-card:      #101320;
-  --bg-card-hover:#13172a;
-  --border:       #1c2040;
-  --border-light: #252a50;
-  --text:         #e8ecf8;
-  --text-muted:   #6872a8;
-  --text-dim:     #343860;
+  /* Theme — burned orange / sky blue SIEM palette */
+  --color-accent:           #e8590c;
+  --color-accent-secondary: #0ea5e9;
+  --color-bg:               #0a0a0a;
+  --color-surface:          #111111;
+  --color-text:             #e5e5e5;
+  --color-text-heading:     #ffffff;
+  --font-heading:           'Outfit', sans-serif;
+  --font-body:              'IBM Plex Mono', monospace;
+  --radius-sm:              2px;
+  --radius-md:              4px;
 
-  /* Primary accent — violet/purple gradient */
-  --accent:       #7c3aed;
-  --accent-2:     #a855f7;
-  --accent-glow:  #7c3aed44;
-  --accent-dim:   #7c3aed18;
-  --accent-grad:  linear-gradient(135deg, #7c3aed, #a855f7);
+  /* Legacy aliases (used across existing components) */
+  --bg:           var(--color-bg);
+  --bg-panel:     var(--color-surface);
+  --bg-card:      #141414;
+  --bg-card-hover:#181818;
+  --border:       #222222;
+  --border-light: #333333;
+  --text:         var(--color-text);
+  --text-muted:   #888888;
+  --text-dim:     #555555;
 
-  --green:        #10b981;
-  --green-dim:    #10b98118;
-  --red:          #f43f5e;
-  --red-dim:      #f43f5e18;
-  --orange:       #f97316;
-  --orange-dim:   #f9731618;
-  --yellow:       #f59e0b;
-  --yellow-dim:   #f59e0b18;
-  --blue:         #6366f1;
-  --blue-dim:     #6366f118;
+  --accent:       var(--color-accent);
+  --accent-2:     var(--color-accent-secondary);
+  --accent-glow:  #e8590c33;
+  --accent-dim:   #e8590c18;
+  --accent-grad:  var(--color-accent);
 
-  --font-mono:    'IBM Plex Mono', monospace;
-  --font-ui:      'Outfit', sans-serif;
-  --radius:       8px;
-  --radius-lg:    12px;
-  --radius-xl:    16px;
+  --green:        #22c55e;
+  --green-dim:    #22c55e18;
+  --red:          var(--color-accent);
+  --red-dim:      #e8590c18;
+  --orange:       var(--color-accent);
+  --orange-dim:   #e8590c18;
+  --yellow:       #eab308;
+  --yellow-dim:   #eab30818;
+  --blue:         var(--color-accent-secondary);
+  --blue-dim:     #0ea5e918;
+
+  --font-mono:    var(--font-body);
+  --font-ui:      var(--font-heading);
+  --radius:       var(--radius-sm);
+  --radius-lg:    var(--radius-md);
+  --radius-xl:    var(--radius-md);
 }
 
 html, body, #root { height: 100%; }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-ui);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
-}
-
-/* Subtle grid texture on bg */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.3;
-  pointer-events: none;
-  z-index: 0;
 }
 
 #root { position: relative; z-index: 1; }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: var(--radius-sm); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
 
-.sev-critical { color: var(--red); }
-.sev-high     { color: var(--orange); }
-.sev-medium   { color: var(--yellow); }
-.sev-low      { color: var(--blue); }
+.sev-critical { color: var(--color-accent); }
+.sev-high     { color: var(--color-accent); }
+.sev-medium   { color: var(--color-accent-secondary); }
+.sev-low      { color: var(--color-accent-secondary); }
+
+.page-title {
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: -0.5px;
+  color: var(--color-text-heading);
+  font-family: var(--font-heading);
+  line-height: 1.2;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-text-heading);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-primary:hover:not(:disabled) { opacity: 0.88; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-accent-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-accent-secondary);
+}
+
+.link-secondary {
+  color: var(--color-accent-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -86,19 +130,45 @@ body::before {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
-  50%       { box-shadow: 0 0 20px var(--accent-glow), 0 0 40px var(--accent-glow); }
-}
 @keyframes spin { to { transform: rotate(360deg) } }
 
 .animate-slide-in { animation: slide-in .25s ease forwards; }
 .animate-fade-in  { animation: fade-in .35s ease forwards; }
 
-/* Accent gradient text */
 .grad-text {
-  background: var(--accent-grad);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-accent);
+}
+
+.disconnect-banner {
+  position: relative;
+  z-index: 10;
+  padding: 6px 16px;
+  background: #e8590c22;
+  border-bottom: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.liquid-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.liquid-bg--static {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 40%, rgba(232, 89, 12, 0.12), transparent),
+    radial-gradient(ellipse 70% 50% at 80% 60%, rgba(14, 165, 233, 0.08), transparent),
+    var(--color-bg);
+  opacity: 1;
+}
+
+.mono-num {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
 }

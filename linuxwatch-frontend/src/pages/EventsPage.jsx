@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { API_BASE } from '../constants'
-import { authHeaders, fmt } from '../utils'
+import { fetchOpts, fmt } from '../utils'
 
 const EVENT_TYPES = [
   '', 'SSH_FAILED_LOGIN', 'PORT_SCAN', 'SUDO_FAILURE',
@@ -31,7 +31,7 @@ export default function EventsPage() {
     setError('')
     try {
       const params = typeFilter ? `?event_type=${typeFilter}` : ''
-      const res = await fetch(`${API_BASE}/events${params}`, { headers: authHeaders() })
+      const res = await fetch(`${API_BASE}/events${params}`, fetchOpts())
       if (res.ok) {
         setEvents(await res.json())
       } else {

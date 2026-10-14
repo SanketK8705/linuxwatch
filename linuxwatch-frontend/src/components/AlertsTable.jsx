@@ -1,20 +1,19 @@
 import { useState } from 'react'
 import SeverityBadge from './SeverityBadge'
 import StatusBadge from './StatusBadge'
-import { fmt, authHeaders } from '../utils'
+import { fmt, fetchOpts } from '../utils'
 import { API_BASE } from '../constants'
 
-export default function AlertsTable({ alerts, onRefresh, onStatusUpdate, compact }) {
+export default function AlertsTable({ alerts, onRefresh, onStatusUpdate, compact, onRowClick, selectedId, userRole = 'user' }) {
   const [updating, setUpdating] = useState(null)
 
   const updateStatus = async (id, status) => {
     setUpdating(id)
     try {
-      await fetch(`${API_BASE}/alerts/${id}`, {
+      await fetch(`${API_BASE}/alerts/${id}`, fetchOpts({
         method: 'PATCH',
-        headers: authHeaders(),
         body: JSON.stringify({ status }),
-      })
+      }))
       // Update in-place via callback (fixes all-alerts-changing bug)
       if (onStatusUpdate) {
         onStatusUpdate(id, status)
@@ -56,9 +55,14 @@ export default function AlertsTable({ alerts, onRefresh, onStatusUpdate, compact
         <tbody>
           {alerts.map(a => (
             <tr key={a.id}
-              style={{ transition: 'background .12s' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card-hover)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              onClick={() => onRowClick?.(a)}
+              style={{
+                transition: 'background .12s',
+                cursor: onRowClick ? 'pointer' : 'default',
+                background: selectedId === a.id ? 'var(--accent-dim)' : 'transparent',
+              }}
+              onMouseEnter={e => { if (selectedId !== a.id) e.currentTarget.style.background = 'var(--bg-card-hover)' }}
+              onMouseLeave={e => { if (selectedId !== a.id) e.currentTarget.style.background = 'transparent' }}
             >
               <td style={td}><SeverityBadge severity={a.severity} /></td>
               <td style={{ ...td, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>
@@ -92,7 +96,7 @@ export default function AlertsTable({ alerts, onRefresh, onStatusUpdate, compact
                         onClick={() => updateStatus(a.id, 'ACKNOWLEDGED')}
                       />
                     )}
-                    {a.status !== 'RESOLVED' && (
+                    {a.status !== 'RESOLVED' && userRole === 'admin' && (
                       <Btn
                         label="resolve"
                         color="var(--green)"
