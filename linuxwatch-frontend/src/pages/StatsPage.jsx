@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { API_BASE } from '../constants'
-import { authHeaders, fmt } from '../utils'
+import { fetchOpts, fmt } from '../utils'
 
 // ── Mini bar chart (pure canvas-free SVG) ──────────────────────────────────
 function BarChart({ data, color = 'var(--accent)', height = 80 }) {
@@ -148,7 +148,7 @@ export default function StatsPage() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/stats`, { headers: authHeaders() })
+      const res = await fetch(`${API_BASE}/stats`, fetchOpts())
       if (!res.ok) { setError('Failed to load stats'); return }
       const data = await res.json()
       setStats(data)

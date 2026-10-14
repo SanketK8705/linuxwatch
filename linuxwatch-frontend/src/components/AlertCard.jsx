@@ -23,6 +23,11 @@ export default function AlertCard({ alert, isNew }) {
       <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: alert.source_ip ? 4 : 0, lineHeight: 1.5 }}>
         {alert.description}
       </p>
+      {alert.event_type && (
+        <p style={{ fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', marginBottom: alert.source_ip ? 3 : 0 }}>
+          event: {alert.event_type}
+        </p>
+      )}
       {alert.source_ip && (
         <p style={{ fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
           ⌁ {alert.source_ip}

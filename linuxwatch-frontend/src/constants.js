@@ -1,12 +1,12 @@
-export const BACKEND = 'http://localhost:3001'
+export const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001'
 export const API_BASE    = `${BACKEND}/api`
 export const SOCKET_URL  = BACKEND
 
 export const SEV_META = {
-  CRITICAL: { color: 'var(--red)',    dim: 'var(--red-dim)',    label: 'CRITICAL' },
-  HIGH:     { color: 'var(--orange)', dim: 'var(--orange-dim)', label: 'HIGH'     },
-  MEDIUM:   { color: 'var(--yellow)', dim: 'var(--yellow-dim)', label: 'MEDIUM'   },
-  LOW:      { color: 'var(--blue)',   dim: 'var(--blue-dim)',   label: 'LOW'      },
+  CRITICAL: { color: 'var(--color-accent)',           dim: 'var(--red-dim)',    label: 'CRITICAL' },
+  HIGH:     { color: 'var(--color-accent)',           dim: 'var(--orange-dim)', label: 'HIGH'     },
+  MEDIUM:   { color: 'var(--color-accent-secondary)', dim: 'var(--blue-dim)',   label: 'MEDIUM'   },
+  LOW:      { color: 'var(--color-accent-secondary)', dim: 'var(--blue-dim)',   label: 'LOW'      },
 }
 
 export const STATUS_META = {
@@ -31,5 +31,5 @@ export const RULES_META = [
   { name: 'MALWARE_CRITICAL',       type: 'MALWARE_DETECTED',    trigger: 'ransomware/rootkit', severity: 'CRITICAL', desc: 'Critical malware — ransomware or rootkit detected.' },
   { name: 'PHISHING_ATTEMPT',       type: 'PHISHING_ATTEMPT',    trigger: 'link not clicked', severity: 'MEDIUM', desc: 'Phishing link delivered but not yet clicked.' },
   { name: 'PHISHING_CLICKED',       type: 'PHISHING_ATTEMPT',    trigger: 'clicked=true',  severity: 'HIGH',     desc: 'User clicked phishing link — credentials at risk.' },
-  { name: 'CREDENTIAL_STUFFING',    type: 'CREDENTIAL_STUFFING', trigger: 'any',           severity: 'HIGH',     desc: 'Credential stuffing attack using leaked credentials.' },
+  { name: 'CREDENTIAL_STUFFING',    type: 'CREDENTIAL_STUFFING', trigger: '5 usernames in 60s', severity: 'HIGH', desc: 'Credential stuffing attack using leaked credentials.' },
 ]
